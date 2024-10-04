@@ -1,1 +1,78 @@
+DATA SERIES FAIR
+DATA ENGINEERING BIG QUERY
+Chicago, merupakan salah satu kota terpadat di Amerika setelah New York dan Los Angeles (https://id.wikipedia.org/wiki/Daftar_kota_di_Amerika_Serikat_menurut_jumlah_penduduk) menjadi salah satu penyumbang jumlah mobil taksi yang berseliweran di Amerika termasuk New York dan Los Angeles. Bila digabungkan terdapat sekitar 150 ribu mobil taksi (https://www.victorynews.id/dunia/33112003037/netizen-wajib-tahu-lima-negara-ini-memiliki-armada-mobil-taksi-terbanyak-di-dunia). Pada kali ini, Saya akan melihat data set menggunakan Google Big Query sebelum mengetahui atau menganalisis lebih lanjut data set tersebut.
+1.	Durasi Perjalanan Hari Senin dan Sabtu
+
+WITH trip_data AS (
+  SELECT 
+    trip_seconds,
+    EXTRACT(DAYOFWEEK FROM trip_start_timestamp) AS weekday
+  FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+  WHERE trip_seconds IS NOT NULL
+)
+
+SELECT 
+  CASE WHEN weekday = 2 THEN 'Monday' ELSE 'Saturday' END AS weekday,
+  ROUND(AVG(trip_seconds),2) AS avg_seconds,
+  APPROX_QUANTILES(trip_seconds, 100)[OFFSET(50)] AS median_seconds,
+  ROUND(STDDEV(trip_seconds),2) AS stddev_seconds
+FROM trip_data
+WHERE weekday IN (2, 7)
+GROUP BY weekday
+ORDER BY weekday desc;
+
+ 
+
+2.	Lima Rute dengan Jumlah Perjalanan Terbanyak Tahun 2023
+WITH trip_data AS (
+  SELECT 
+    pickup_community_area,
+    dropoff_community_area,
+    COUNT(*) AS num_trips
+  FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+  WHERE pickup_community_area IS NOT NULL
+    AND dropoff_community_area IS NOT NULL
+    AND EXTRACT(YEAR FROM trip_start_timestamp) = 2023
+  GROUP BY pickup_community_area, dropoff_community_area
+)
+
+SELECT 
+  pickup_community_area,
+  dropoff_community_area,
+  num_trips
+FROM trip_data
+ORDER BY num_trips DESC
+LIMIT 5;
+
+ 
+
+3.	Perbandingan Biaya Rata-Rata Perjalanan Taxi Berdasarkan Metode Pembayaran Pada Tahun 2019
+WITH fare_data AS (
+  SELECT 
+    payment_type,
+    fare,
+    tips,
+    tolls
+  FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+  WHERE EXTRACT(YEAR FROM trip_start_timestamp) = 2019
+    AND payment_type IS NOT NULL
+)
+
+SELECT
+  payment_type,
+  AVG(fare) AS average_fare,
+  AVG(tips) AS average_tips,
+  AVG(tolls) AS average_tolls
+FROM fare_data
+GROUP BY payment_type
+ORDER BY average_fare DESC;
+
+ 
+
+Sumber
+1.	https://console.cloud.google.com/marketplace/product/city-of-chicago-public-data/chicago-taxi-trips?project=swift-area-437513-e5
+2.	https://www.w3schools.com/sql/default.asp
+3.	https://www.w3schools.com/mysql/default.asp
+4.	https://id.wikipedia.org/wiki/Daftar_kota_di_Amerika_Serikat_menurut_jumlah_penduduk
+5.	https://www.victorynews.id/dunia/33112003037/netizen-wajib-tahu-lima-negara-ini-memiliki-armada-mobil-taksi-terbanyak-di-dunia
 
