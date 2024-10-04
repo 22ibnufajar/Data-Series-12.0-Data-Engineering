@@ -60,9 +60,9 @@ WITH fare_data AS (
 
 SELECT
   payment_type,
-  AVG(fare) AS average_fare,
-  AVG(tips) AS average_tips,
-  AVG(tolls) AS average_tolls
+  ROUND(AVG(fare),5) AS average_fare,
+  ROUND(AVG(tips),5) AS average_tips,
+  ROUND(AVG(tolls),5) AS average_tolls
 FROM fare_data
 GROUP BY payment_type
 ORDER BY average_fare DESC;
