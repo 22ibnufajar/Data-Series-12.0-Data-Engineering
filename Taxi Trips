@@ -19,7 +19,7 @@ SELECT
 FROM trip_data
 WHERE weekday IN (2, 7)
 GROUP BY weekday
-ORDER BY weekday desc;
+ORDER BY weekday DESC;
 
  
 
